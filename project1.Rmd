@@ -1,0 +1,145 @@
+---
+title: "Porject 1 - Data analysis"
+author: "Peter Fernandes"
+output:
+  html_document:
+    includes:
+      in_header: header.html
+    css: ./lab.css
+    highlight: pygments
+    theme: cerulean
+    toc: true
+    toc_float: true
+  pdf_document: default
+editor_options: 
+  chunk_output_type: console
+---
+### Introduction
+
+The objective of the project is to read the given text file, clean and process data, and generate csv of the processed data.
+
+The given .txt file has Chess tournament result. Each result has two rows, first row has Pair number, Player name, Total points and rounds played. Second row has State to whom player belongs, pre-rating.
+
+We need to calculate the Average pre-rating of the opponent
+
+
+### Loading of the required packages
+
+```{r global_options, warning=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = FALSE, 
+                      fig.show = "hide", message = FALSE)
+if (!require("stringr")) install.packages('stringr')
+if (!require("DT")) install.packages('DT')
+if (!require("ggplot2")) install.packages('ggplot2')
+```
+
+### Reading of the text file
+
+#### The text file with chess results is read from GitHub
+
+```{r warning=FALSE}
+#Read the txt file from GitHub
+rawdata <- readLines("https://raw.githubusercontent.com/petferns/607-Project1/master/tournamentinfo.txt")
+
+#Get the count of rows
+rowlen <- length(rawdata)
+```
+
+
+### Table - Playername
+
+#### We create a table with rows starting with Player name. From the text file we see the needed data starts from row 5th and every 3rd row we have row of dashes which we don't need
+
+```{r warning=FALSE}
+#Rows that start with player names
+PlayerNameRows <- rawdata[seq(5, rowlen, 3)]
+
+```
+
+### Table - Playerstate
+
+#### We also create a table with rows starting with player state. These row start from 6th row in the text file and we skip the dashes
+
+```{r warning=FALSE}
+#Rows that start with player states
+PlayerStateRows <- rawdata[seq(6, rowlen, 3)]
+
+```
+
+### Player Name
+
+```{r warning=FALSE}
+#Get player name
+PlayerName <- str_trim(str_extract(PlayerNameRows, "(\\w+\\s){2,3}"))
+
+```
+
+### Player Total points
+
+```{r warning=FALSE}
+#Get player total points
+TotalPoints <- as.numeric(str_extract(PlayerNameRows, "\\d+\\.\\d+"))
+```
+
+### Player State
+
+```{r warning=FALSE}
+#Get player State
+PlayerState <- str_extract(PlayerStateRows, "\\w+")
+```
+
+### Player Chess Pre-rating
+
+```{r warning=FALSE}
+#Get player pre-rating
+
+PlayerPreRating <- str_extract(PlayerStateRows, "[^\\d]\\d{3,4}[^\\d]")
+PlayerPreRating <- as.integer(str_extract(PlayerPreRating, "\\d+"))
+```
+
+### Opponent Chess Pre-rating
+
+```{r warning=FALSE}
+#Get the opponent
+
+GetOpponents <- str_extract_all(PlayerNameRows, "\\d+\\|")
+GetOpponents <- str_extract_all(GetOpponents, "\\d+")
+
+#Calculate Opponent avg pre rating
+
+Pair <- as.integer(str_extract(PlayerNameRows, "\\d+"))
+AvgOpponentRating <- Pair
+for (i in 1:NROW(Pair)) { 
+  AvgOpponentRating[i] <- round(mean(PlayerPreRating[as.numeric(unlist(GetOpponents[Pair[i]]))])) 
+}
+
+
+
+
+```
+
+### Summarize the data chunks into df
+
+```{r }
+#Summarize all the data into  data frame
+
+SummaryData <- data.frame(PlayerName, PlayerState, TotalPoints, PlayerPreRating, AvgOpponentRating)
+
+```
+
+### Creating CSV of data
+
+```{r}
+write.csv(SummaryData, file = "tournament.csv")
+```
+
+
+### Visualizing the player pre-ratings
+
+```{r echo=FALSE,fig.show="asis", fig.width=7, fig.height=4}
+hist(SummaryData$PlayerPreRating, breaks = 30, main = "Distribution of Player Pre-Ratings", xlab = "PlayerPreRating", ylab = "Point")
+
+```
+
+
+
