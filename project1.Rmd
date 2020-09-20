@@ -130,7 +130,7 @@ SummaryData <- data.frame(PlayerName, PlayerState, TotalPoints, PlayerPreRating,
 ### Creating CSV of data
 
 ```{r}
-write.csv(SummaryData, file = "tournament.csv")
+write.csv(SummaryData, file = "c:/peter/tournament.csv")
 ```
 
 
